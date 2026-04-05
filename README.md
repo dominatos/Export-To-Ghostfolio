@@ -359,6 +359,21 @@ There is an experimental feature (since 0.12.0) with which you can automatically
 
 ---
 
+## Automation Scripts (Trading 212)
+
+The `scripts/` directory contains a ready-to-use automation pipeline for **Trading 212** users, providing end-to-end scheduled synchronization with Ghostfolio.
+
+**Key features:**
+
+- **Automatic API fetching** — Retrieves transaction history directly from the Trading 212 API (bootstraps full history on first run, incremental updates thereafter).
+- **Multi-account support** — Auto-discovers all configured accounts via prefixed environment variables.
+- **Universal CSV→Ghostfolio conversion** — Wraps the Docker converter with smart header detection, split-output handling, and post-import verification.
+- **Systemd integration** — Includes service and timer units for fully automated daily syncs.
+
+See [`scripts/readme.md`](scripts/readme.md) for full installation and configuration instructions.
+
+---
+
 ## Contributing
 
 We welcome any contribution to the repository. Feel free to create an [issue](https://github.com/dickwolff/Export-To-Ghostfolio/issues/new) or, even better, build it yourself and create a [pull request](https://github.com/dickwolff/Export-To-Ghostfolio/compare)!
