@@ -57,3 +57,6 @@ isin-overrides*.txt
 
 # Ignore output folder
 e2g-output
+scripts/tofix.md
+scripts/INSTRUCTIONS.md
+scripts/prompt.txt
