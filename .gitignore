@@ -61,3 +61,4 @@ scripts/tofix.md
 scripts/INSTRUCTIONS.md
 scripts/prompt.txt
 scripts/__pycache__/t212_fetch.cpython-312.pyc
+scripts/tests/__pycache__/test_t212_fetch.cpython-312.pyc
