@@ -118,10 +118,10 @@ export abstract class AbstractConverter {
     /**
      * Return all records that were skipped during the last conversion run.
      *
-     * @returns Array of {@link SkippedRecord} entries (may be empty).
+     * @returns A readonly view of the {@link SkippedRecord} entries (may be empty).
      */
-    public getSkippedRecords(): SkippedRecord[] {
-        return this.skippedRecords;
+    public getSkippedRecords(): ReadonlyArray<SkippedRecord> {
+        return [...this.skippedRecords];
     }
 
     /**
