@@ -140,7 +140,17 @@ export default class GhostfolioService {
                 headers: [["Content-Type", "application/json"]],
                 body: JSON.stringify({ accessToken: process.env.GHOSTFOLIO_SECRET })
             });
+
+            if (!bearerResponse.ok) {
+                throw new Error(`Authentication failed: ${bearerResponse.status} ${bearerResponse.statusText}`);
+            }
+
             const bearer = await bearerResponse.json();
+
+            if (!bearer.authToken) {
+                throw new Error("Authentication succeeded but no authToken was returned");
+            }
+
             this.cachedBearerToken = bearer.authToken;
             return;
         }
