@@ -52,7 +52,7 @@ export default class GhostfolioService {
         if (validationResult.status === 401) {
 
             await this.authenticate(true);
-            return await this.validate(path, retryCount++);
+            return await this.validate(path, retryCount + 1);
         }
 
         // If status is 400, then import failed. 
@@ -107,7 +107,7 @@ export default class GhostfolioService {
         if (importResult.status === 401) {
 
             await this.authenticate(true);
-            return await this.import(path, retryCount++);
+            return await this.import(path, retryCount + 1);
         }
 
         var response = await importResult.json();
