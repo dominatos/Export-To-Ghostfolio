@@ -5,6 +5,12 @@ import * as fs from "fs";
 const mockFetch = jest.fn();
 global.fetch = mockFetch as any;
 
+jest.mock("fs", () => ({
+    ...jest.requireActual("fs"),
+    readFileSync: jest.fn()
+}));
+const mockedFs = jest.mocked(fs);
+
 describe("GhostfolioService", () => {
 
     beforeAll(() => {
@@ -29,19 +35,7 @@ describe("GhostfolioService", () => {
 
             const service = new GhostfolioService();
 
-            // Act - trigger authenticate via validate (which calls authenticate on 401)
-            // First call: validate gets 401, triggers authenticate
-            mockFetch.mockResolvedValueOnce({
-                ok: true,
-                status: 201,
-                json: async () => ({})
-            });
-
-            // We need to call validate to trigger authenticate
-            // But validate reads a file, so let's test authenticate indirectly
-            // by checking the fetch call format
-
-            // Access private method via any cast
+            // Act
             await (service as any).authenticate(true);
 
             // Assert
@@ -110,8 +104,7 @@ describe("GhostfolioService", () => {
         it("should stop after 3 retries (retryCount advances correctly)", async () => {
             // Arrange
             const service = new GhostfolioService();
-            const tmpFile = "/tmp/test-validate.json";
-            fs.writeFileSync(tmpFile, JSON.stringify({ activities: [] }));
+            mockedFs.readFileSync.mockReturnValue(JSON.stringify({ activities: [] }));
 
             // Mock fetch: auth always succeeds, validate always returns 401
             mockFetch.mockImplementation(async (url: string) => {
@@ -123,7 +116,7 @@ describe("GhostfolioService", () => {
             });
 
             // Act & Assert - should throw after 3 retries (retryCount 0→1→2→3)
-            await expect(service.validate(tmpFile, 0))
+            await expect(service.validate("/fake/path.json", 0))
                 .rejects.toThrow("Failed to validate export file because of authentication error");
 
             // Auth should have been called 3 times (retryCount 0→1→2, then 3 throws before auth)
@@ -131,9 +124,6 @@ describe("GhostfolioService", () => {
                 (call: any) => call[0].includes("/auth/anonymous")
             );
             expect(authCalls.length).toBe(3);
-
-            // Cleanup
-            fs.unlinkSync(tmpFile);
         });
     });
 });
