@@ -134,8 +134,12 @@ export default class GhostfolioService {
         // Only get bearer when it isn't set or has to be refreshed.
         if (!this.cachedBearerToken || refresh) {
 
-            // Retrieve bearer token for authentication.
-            const bearerResponse = await fetch(`${process.env.GHOSTFOLIO_URL}/api/v1/auth/anonymous/${process.env.GHOSTFOLIO_SECRET}`);
+            // Retrieve bearer token for authentication (POST with accessToken body — Ghostfolio v3+).
+            const bearerResponse = await fetch(`${process.env.GHOSTFOLIO_URL}/api/v1/auth/anonymous`, {
+                method: "POST",
+                headers: [["Content-Type", "application/json"]],
+                body: JSON.stringify({ accessToken: process.env.GHOSTFOLIO_SECRET })
+            });
             const bearer = await bearerResponse.json();
             this.cachedBearerToken = bearer.authToken;
             return;
