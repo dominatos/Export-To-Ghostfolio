@@ -52,7 +52,7 @@ export default class GhostfolioService {
         if (validationResult.status === 401) {
 
             await this.authenticate(true);
-            return await this.validate(path, retryCount++);
+            return await this.validate(path, retryCount + 1);
         }
 
         // If status is 400, then import failed. 
@@ -107,7 +107,7 @@ export default class GhostfolioService {
         if (importResult.status === 401) {
 
             await this.authenticate(true);
-            return await this.import(path, retryCount++);
+            return await this.import(path, retryCount + 1);
         }
 
         var response = await importResult.json();
@@ -134,9 +134,23 @@ export default class GhostfolioService {
         // Only get bearer when it isn't set or has to be refreshed.
         if (!this.cachedBearerToken || refresh) {
 
-            // Retrieve bearer token for authentication.
-            const bearerResponse = await fetch(`${process.env.GHOSTFOLIO_URL}/api/v1/auth/anonymous/${process.env.GHOSTFOLIO_SECRET}`);
+            // Retrieve bearer token for authentication (POST with accessToken body — Ghostfolio v3+).
+            const bearerResponse = await fetch(`${process.env.GHOSTFOLIO_URL}/api/v1/auth/anonymous`, {
+                method: "POST",
+                headers: [["Content-Type", "application/json"]],
+                body: JSON.stringify({ accessToken: process.env.GHOSTFOLIO_SECRET })
+            });
+
+            if (!bearerResponse.ok) {
+                throw new Error(`Authentication failed: ${bearerResponse.status} ${bearerResponse.statusText}`);
+            }
+
             const bearer = await bearerResponse.json();
+
+            if (!bearer.authToken) {
+                throw new Error("Authentication succeeded but no authToken was returned");
+            }
+
             this.cachedBearerToken = bearer.authToken;
             return;
         }
