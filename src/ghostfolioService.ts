@@ -134,23 +134,41 @@ export default class GhostfolioService {
         // Only get bearer when it isn't set or has to be refreshed.
         if (!this.cachedBearerToken || refresh) {
 
-            // Retrieve bearer token for authentication (POST with accessToken body — Ghostfolio v3+).
-            const bearerResponse = await fetch(`${process.env.GHOSTFOLIO_URL}/api/v1/auth/anonymous`, {
+            // Try Ghostfolio v3+ authentication first (POST with accessToken body).
+            const v3Response = await fetch(`${process.env.GHOSTFOLIO_URL}/api/v1/auth/anonymous`, {
                 method: "POST",
                 headers: [["Content-Type", "application/json"]],
                 body: JSON.stringify({ accessToken: process.env.GHOSTFOLIO_SECRET })
             });
 
-            if (!bearerResponse.ok) {
-                throw new Error(`Authentication failed: ${bearerResponse.status} ${bearerResponse.statusText}`);
+            if (v3Response.ok) {
+                const bearer = await v3Response.json();
+
+                if (!bearer.authToken) {
+                    throw new Error("Authentication succeeded but no authToken was returned");
+                }
+
+                console.log("[i] Authenticated using Ghostfolio v3+ (POST) method.");
+                this.cachedBearerToken = bearer.authToken;
+                return;
             }
 
-            const bearer = await bearerResponse.json();
+            // v3 POST failed — fall back to pre-v3 authentication (GET with secret in URL).
+            console.log(`[i] Ghostfolio v3+ auth returned ${v3Response.status}, falling back to pre-v3 (GET) method...`);
+
+            const legacyResponse = await fetch(`${process.env.GHOSTFOLIO_URL}/api/v1/auth/anonymous/${process.env.GHOSTFOLIO_SECRET}`);
+
+            if (!legacyResponse.ok) {
+                throw new Error(`Authentication failed on both v3+ (POST) and pre-v3 (GET): ${legacyResponse.status} ${legacyResponse.statusText}`);
+            }
+
+            const bearer = await legacyResponse.json();
 
             if (!bearer.authToken) {
                 throw new Error("Authentication succeeded but no authToken was returned");
             }
 
+            console.log("[i] Authenticated using pre-v3 (GET) method.");
             this.cachedBearerToken = bearer.authToken;
             return;
         }
